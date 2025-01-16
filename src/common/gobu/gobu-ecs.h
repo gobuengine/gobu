@@ -22,7 +22,7 @@ go_extern ECS_COMPONENT_DECLARE(go_core_scene_grid_t);
 // game project settings
 go_extern ECS_COMPONENT_DECLARE(go_core_project_settings1_t);
 go_extern ECS_COMPONENT_DECLARE(go_core_project_settings2_t);
-go_extern ECS_COMPONENT_DECLARE(go_core_project_settings3_t);
+go_extern ECS_COMPONENT_DECLARE(go_core_scene_rendering);
 
 // go_extern ECS_COMPONENT_DECLARE(gbSceneActive);
 go_extern ECS_COMPONENT_DECLARE(go_origin_t);

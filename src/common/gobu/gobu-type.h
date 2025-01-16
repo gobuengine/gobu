@@ -185,6 +185,15 @@ typedef struct
 
 typedef struct
 {
+    go_vec2_t offset;   // Camera offset (displacement from target)
+    go_vec2_t target;   // Camera target (rotation and zoom origin)
+    float   rotation;   // Camera rotation in degrees
+    float   zoom;       // Camera zoom (scaling), should be 1.0f by default
+} go_camera_t;
+
+// MARK: COMPONENTS
+typedef struct
+{
     ecs_string_t text;
     ecs_u32_t fontSize;
     ecs_f32_t spacing;
@@ -254,6 +263,14 @@ typedef struct
     ecs_u32_t size;
 } go_core_scene_grid_t;
 
+typedef struct
+{
+    go_size_t resolution;
+    int targetFps;
+    go_resolution_mode_t resolutionMode;
+    go_scale_mode_t scaleMode;
+}go_core_scene_rendering;
+
 // MARK: PROJECT SETTINGS
 typedef struct
 {
@@ -268,14 +285,6 @@ typedef struct
     ecs_string_t version;
     ecs_string_t publisher;
 }go_core_project_settings2_t;
-
-typedef struct
-{
-    go_size_t resolution;
-    int targetFps;
-    go_resolution_mode_t resolutionMode;
-    go_scale_mode_t scaleMode;
-}go_core_project_settings3_t;
 
 // MARK: INSPECTOR PROPERTIES
 typedef struct go_property_t {

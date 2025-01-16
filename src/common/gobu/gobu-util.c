@@ -208,6 +208,8 @@ go_public char *go_util_read_text_file(const char *filename)
     return contents;
 }
 
+// MARK: Color
+
 go_public go_color_t go_color_adjust_contrast(go_color_t color, float mixFactor)
 {
     // Limitar mixFactor entre 0.0 y 1.0
@@ -245,3 +247,32 @@ go_public uint32_t go_color_to_uint(go_color_t color)
     return ((uint32_t)color.r) | ((uint32_t)color.g<<8) | ((uint32_t)color.b<<16) | ((uint32_t)color.a<<24);
 }
 
+// MARK: Math
+go_public float go_math_clamp(float value, float min, float max)
+{
+    if (value < min)
+        return min;
+    if (value > max)
+        return max;
+    return value;
+}
+
+go_public int go_math_random_int(int min, int max)
+{
+    return min + rand() % (max - min + 1);
+}
+
+go_public go_vec2_t go_math_vec2_add(go_vec2_t a, go_vec2_t b)
+{
+    return (go_vec2_t){a.x + b.x, a.y + b.y};
+}
+
+go_public go_vec2_t go_math_vec2_scale(go_vec2_t a, float scale)
+{
+    return (go_vec2_t){a.x * scale, a.y * scale};
+}
+
+go_public go_vec2_t go_math_vec2_sub(go_vec2_t a, go_vec2_t b)
+{
+    return (go_vec2_t){a.x - b.x, a.y - b.y};
+}

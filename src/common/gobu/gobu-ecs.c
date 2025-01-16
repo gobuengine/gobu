@@ -32,7 +32,7 @@ ECS_COMPONENT_DECLARE(go_core_scene_grid_t);
 // game project settings
 ECS_COMPONENT_DECLARE(go_core_project_settings1_t);
 ECS_COMPONENT_DECLARE(go_core_project_settings2_t);
-ECS_COMPONENT_DECLARE(go_core_project_settings3_t);
+ECS_COMPONENT_DECLARE(go_core_scene_rendering);
 
 // ECS_COMPONENT_DECLARE(gbSceneActive);
 ECS_COMPONENT_DECLARE(go_origin_t);
@@ -141,7 +141,7 @@ go_public void go_ecs_project_settings_init(const char *name)
         .publisher = go_util_string("[Publisher]")
     });
 
-    ecs_set(uworld, projectSettings, go_core_project_settings3_t, {
+    ecs_set(uworld, projectSettings, go_core_scene_rendering, {
         .resolution = {1280, 720},
         .targetFps = 60,
         .resolutionMode = GB_RESIZE_MODE_NO_CHANGE,
@@ -443,7 +443,7 @@ go_internal void gobucoreImport(ecs_world_t *world)
     // game project settings
     ECS_COMPONENT_DEFINE(world, go_core_project_settings1_t);
     ECS_COMPONENT_DEFINE(world, go_core_project_settings2_t);
-    ECS_COMPONENT_DEFINE(world, go_core_project_settings3_t);
+    ECS_COMPONENT_DEFINE(world, go_core_scene_rendering);
 
     // ECS_COMPONENT_DEFINE(world, gbSceneActive);
     ECS_COMPONENT_DEFINE(world, go_origin_t);
@@ -662,7 +662,7 @@ go_internal void gobucoreImport(ecs_world_t *world)
     });
 
     ecs_struct(world, {
-        .entity = ecs_id(go_core_project_settings3_t),
+        .entity = ecs_id(go_core_scene_rendering),
         .members = {
             {.name = "resolution", .type = ecs_id(go_size_t)},
             {.name = "targetFps", .type = ecs_id(ecs_u32_t)},

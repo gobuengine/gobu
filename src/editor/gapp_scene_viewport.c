@@ -8,10 +8,11 @@
 struct _GappSceneViewport
 {
     GtkBox parent_instance;
+    go_camera_t camera;
 };
 
-static void gapp_scene_viewport_ready(GtkWidget *viewport);
-static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int height);
+static void gapp_scene_viewport_ready(GtkWidget *viewport, GappSceneViewport *sceneViewport);
+static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int height, GappSceneViewport *sceneViewport);
 
 // MARK: CLASS
 G_DEFINE_TYPE(GappSceneViewport, gapp_scene_viewport, GTK_TYPE_BOX)
@@ -30,13 +31,15 @@ static void gapp_scene_viewport_class_init(GappSceneViewportClass *klass)
 
 static void gapp_scene_viewport_init(GappSceneViewport *self)
 {
+    self->camera = (go_camera_t){.offset = {0, 0}, .target = {0, 0}, .rotation = 0.0f, .zoom = 1.0f};
+
     GtkWidget *viewport = gapp_widget_viewport_new();
     g_signal_connect(viewport, "viewport-ready", G_CALLBACK(gapp_scene_viewport_ready), self);
     g_signal_connect(viewport, "viewport-render", G_CALLBACK(gapp_scene_viewport_render), self);
     gtk_box_append(GTK_BOX(self), viewport);
 }
 
-static void gapp_scene_viewport_ready(GtkWidget *viewport)
+static void gapp_scene_viewport_ready(GtkWidget *viewport, GappSceneViewport *sceneViewport)
 {
     // ecs_entity_t paint = go_ecs_entity_new(go_ecs_scene_get_open(), "ShapeRect");
     // ecs_set(go_ecs_world(), paint, go_comp_rectangle_t, {.width = 100, .height = 100, .color = YELLOW, .lineColor = RED, .lineWidth = 2});
@@ -44,7 +47,7 @@ static void gapp_scene_viewport_ready(GtkWidget *viewport)
     // transform->position = (go_vec2_t){100, 100};
 }
 
-static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int height)
+static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int height, GappSceneViewport *sceneViewport)
 {
     ecs_entity_t scene_id = go_ecs_scene_get_open();
     if (!scene_id)
@@ -56,17 +59,38 @@ static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int heigh
 
     go_core_scene_t *scene = ecs_get_mut(go_ecs_world(), scene_id, go_core_scene_t);
     go_core_scene_grid_t *grid = ecs_get_mut(go_ecs_world(), scene_id, go_core_scene_grid_t);
-    go_core_project_settings3_t *rendering = ecs_get_mut(go_ecs_world(), projectSettings, go_core_project_settings3_t);
+    go_core_scene_rendering *rendering = ecs_get_mut(go_ecs_world(), projectSettings, go_core_scene_rendering);
     go_color_t gridColor = go_color_adjust_contrast(scene->color, 0.1f);
 
-    go_gfx_viewport_begin();
-    go_gfx_viewport_color(scene->color.r, scene->color.g, scene->color.b);
+    if (go_mouse_is_down(GO_MOUSEBUTTON_LEFT))
     {
-        if (grid && grid->enabled)
-            go_draw_grid(width, height, grid->size, gridColor, 0);
+        go_vec2_t delta = go_mouse_delta();
+        delta = go_math_vec2_scale(delta, -1.0f / sceneViewport->camera.zoom);
+        sceneViewport->camera.target = go_math_vec2_add(sceneViewport->camera.target, delta);
+    }
 
-        go_draw_text("Hello, World!", 400, 400, 25, RED, 0);
-        go_draw_rect(0, 0, rendering->resolution.width, rendering->resolution.height, BLANK, go_color_adjust_contrast(gridColor, 0.2f), 2.0f, 0);
+    float wheel = go_mouse_wheel();
+    if (wheel != 0)
+    {
+        float scaleFactor = 1.0f + (0.25f * fabsf(wheel));
+        if (wheel < 0)
+            scaleFactor = 1.0f / scaleFactor;
+        sceneViewport->camera.zoom = go_math_clamp(sceneViewport->camera.zoom * scaleFactor, 0.60, 64.0f);
+    }
+
+    go_gfx_viewport_begin();
+    {
+        go_gfx_viewport_color(scene->color.r, scene->color.g, scene->color.b);
+
+        go_gfx_camera_begin(sceneViewport->camera);
+        {
+            go_draw_text("Hello, World!", rendering->resolution.width / 2 - 100, rendering->resolution.height / 2, 25, RED, GO_LAYER_VOID);
+            go_draw_rect(0, 0, rendering->resolution.width, rendering->resolution.height, BLANK, go_color_adjust_contrast(gridColor, 0.2f), 2.0f, GO_LAYER_VOID);
+        }
+        go_gfx_camera_end();
+
+        if (grid && grid->enabled)
+            go_draw_grid(width, height, grid->size, gridColor, GO_LAYER_DEBUG);
     }
     go_gfx_viewport_end();
 

@@ -8,13 +8,30 @@
 #include "gobu-backend-sokol.h"
 #endif
 
+typedef enum go_layer_default
+{
+    GO_LAYER_VOID = 0,
+    GO_LAYER_BACKGROUND = 1,  // Fondo más lejano, cielos, paisajes estáticos
+    GO_LAYER_PARALLAX = 2,    // Elementos de fondo con parallax
+    GO_LAYER_MIDGROUND = 3,   // Elementos decorativos del nivel
+    GO_LAYER_WORLD = 4,       // Elementos principales del juego, personajes
+    GO_LAYER_FOREGROUND = 5,  // Elementos por delante de los personajes
+    GO_LAYER_PARTICLES = 6,   // Efectos de partículas y visuales
+    GO_LAYER_UI_BACK = 7,     // Elementos UI de fondo (paneles, ventanas)
+    GO_LAYER_UI_ELEMENTS = 8, // Elementos UI interactivos (botones, textos)
+    GO_LAYER_UI_FRONT = 9,    // Elementos UI superiores (popups, mensajes)
+    GO_LAYER_DEBUG = 10,      // Capa para debugging y desarrollo
+    GO_LAYER_COUNT = 11       // Total número de capas
+} go_layer_default;
+
 typedef struct go_gfx_context_t
 {
     int width, height;
     int framebuffer_id;
     go_font_t font_default;
-    go_bgfx_context *bctx;          // backend context
-}go_gfx_context_t;
+    go_bgfx_context *bctx; // backend context
+    go_camera_t cameraMain;
+} go_gfx_context_t;
 
 go_bgfx_context *go_gfx_context(void);
 go_font_t go_gfx_font_default(void);
@@ -23,10 +40,16 @@ void *go_gfx_font_context(void);
 go_public void go_gfx_init(go_gfx_context_t *ctx, int width, int height);
 go_public void go_gfx_shutdown(void);
 
+go_public go_camera_t go_gfx_viewport_camera(void);
+go_public void go_gfx_viewport_set_camera(go_camera_t camera);
+
 go_public int go_gfx_viewport_width(void);
 go_public int go_gfx_viewport_height(void);
 go_public void go_gfx_viewport_set_resize(int width, int height);
 go_public void go_gfx_set_viewport(int width, int height);
+
+go_public void go_gfx_camera_begin(go_camera_t camera);
+go_public void go_gfx_camera_end(void);
 
 go_public void go_gfx_viewport_begin(void);
 go_public void go_gfx_viewport_end(void);
@@ -63,4 +86,3 @@ go_public void go_gfx_rotate(float angle);
 go_public void go_gfx_layer(int layer);
 
 #endif // GOBU_GFX_H
-

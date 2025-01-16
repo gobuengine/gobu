@@ -58,7 +58,7 @@ static void gapp_project_setting_init(GappProjectSetting *self)
     ecs_entity_t project = go_ecs_project_settings();
     go_core_project_settings1_t *gameinfo = ecs_get_mut(go_ecs_world(), project, go_core_project_settings1_t);
     go_core_project_settings1_t *packaging = ecs_get_mut(go_ecs_world(), project, go_core_project_settings2_t);
-    go_core_project_settings1_t *renderer = ecs_get_mut(go_ecs_world(), project, go_core_project_settings3_t);
+    go_core_project_settings1_t *renderer = ecs_get_mut(go_ecs_world(), project, go_core_scene_rendering);
 
     GtkWidget *input_props;
     {
@@ -80,7 +80,7 @@ static void gapp_project_setting_init(GappProjectSetting *self)
             gtk_widget_set_margin_bottom(listbox, 30);
             gtk_box_append(vbox, listbox);
             {
-                gapp_inspector_create_component_fields(renderer, ecs_id(go_core_project_settings3_t), listbox, gapp_project_setting_handle_field, self);
+                gapp_inspector_create_component_fields(renderer, ecs_id(go_core_scene_rendering), listbox, gapp_project_setting_handle_field, self);
             }
         }
     }

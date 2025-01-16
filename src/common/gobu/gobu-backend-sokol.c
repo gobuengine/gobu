@@ -16,7 +16,7 @@ struct go_bgfx_context
     sg_pass_action pass_action;
     sgl_pipeline pipeline;
     sgl_context context;
-    FONScontext *fontctx;           // font context
+    FONScontext *fontctx; // font context
     int layer;
 };
 
@@ -81,7 +81,7 @@ go_public void go_bgfx_viewport_end(void)
         .swapchain = {.width = go_gfx_viewport_width(), .height = go_gfx_viewport_height(), .gl.framebuffer = go_gfx_viewport_framebuffer()},
     });
 
-    for (int i = 0; i < go_gfxctx.layer; i++)
+    for (int i = 0; i < GO_LAYER_COUNT; i++)
         sgl_draw_layer(i);
 
     sgl_context_draw(go_gfxctx.context);
@@ -246,8 +246,8 @@ go_public void go_bgfx_rotate(float angle)
 
 go_public void go_bgfx_layer(int layer)
 {
-    if (layer > go_gfxctx.layer)
-        go_gfxctx.layer = layer;
+    // if (layer > go_gfxctx.layer)
+    //     go_gfxctx.layer = layer;
 
     sgl_layer(layer);
 }
@@ -256,4 +256,3 @@ go_public void *go_bgfx_font_context(void)
 {
     return go_gfxctx.fontctx;
 }
-
