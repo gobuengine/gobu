@@ -69,10 +69,10 @@ static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int heigh
         sceneViewport->camera.target = go_math_vec2_add(sceneViewport->camera.target, delta);
     }
 
-    float wheel = go_mouse_wheel();
+    float wheel = go_mouse_wheel() * -1;
     if (wheel != 0)
     {
-        float scaleFactor = 1.0f + (0.25f * fabsf(wheel));
+        float scaleFactor = 1.0f + (0.02f * fabsf(wheel));
         if (wheel < 0)
             scaleFactor = 1.0f / scaleFactor;
         sceneViewport->camera.zoom = go_math_clamp(sceneViewport->camera.zoom * scaleFactor, 0.60, 64.0f);
@@ -84,8 +84,8 @@ static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int heigh
 
         go_gfx_camera_begin(sceneViewport->camera);
         {
-            go_draw_text("Hello, World!", rendering->resolution.width / 2 - 100, rendering->resolution.height / 2, 25, RED, GO_LAYER_VOID);
-            go_draw_rect(0, 0, rendering->resolution.width, rendering->resolution.height, BLANK, go_color_adjust_contrast(gridColor, 0.2f), 2.0f, GO_LAYER_VOID);
+            go_draw_text("Hello, World!", rendering->resolution.width / 2 - 100, rendering->resolution.height / 2, 25, RED, GO_LAYER);
+            go_draw_rect(0, 0, rendering->resolution.width, rendering->resolution.height, BLANK, go_color_adjust_contrast(gridColor, 0.2f), 2.0f, GO_LAYER);
         }
         go_gfx_camera_end();
 

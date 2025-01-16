@@ -142,8 +142,6 @@ go_public void go_draw_circle(float x, float y, float radius, go_color_t fill_co
 
 go_public void go_draw_grid(int width, int height, int cell_size, go_color_t color, int layer_index)
 {
-    go_camera_t main = go_gfx_viewport_camera();
-    
     go_gfx_layer(layer_index);
     go_gfx_begin(GFXB_LINES);
     {

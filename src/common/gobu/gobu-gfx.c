@@ -25,9 +25,6 @@ go_public void go_gfx_init(go_gfx_context_t *ctx, int width, int height)
     go_gfxptr.width = width;
     go_gfxptr.height = height;
     go_gfxptr.framebuffer_id = 0;
-    // camera main
-    go_gfxptr.cameraMain.zoom = 1.0f;
-    go_gfxptr.cameraMain.rotation = 0.0f;
 
     go_gfxptr.font_default = go_font_load_from_file("Content/fonts/Silkscreen-Regular.ttf");
 }
@@ -36,16 +33,6 @@ go_public void go_gfx_shutdown(void)
 {
     go_bgfx_destroy();
     free(go__global_gfx_ptr);
-}
-
-go_public go_camera_t go_gfx_viewport_camera(void)
-{
-    return go_gfxptr.cameraMain;
-}
-
-go_public void go_gfx_viewport_set_camera(go_camera_t camera)
-{
-    go_gfxptr.cameraMain = camera;
 }
 
 go_public void go_gfx_set_viewport(int width, int height)

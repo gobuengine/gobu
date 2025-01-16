@@ -36,6 +36,8 @@ endif
 libgobu_src = files(
     'externs/flecs.c',
     'gobu-backend-sokol.c',
+    'gobu-math.c',
+    'gobu-camera.c',
     'gobu-util.c',
     'gobu-ecs.c',
     'gobu-gfx.c',
@@ -47,8 +49,9 @@ libgobu_src = files(
 )
 
 libgobu_header = files(
-    'gobu.h',
     'gobu-backend-sokol.h',
+    'gobu-math.h',
+    'gobu-camera.h',
     'gobu-util.h',
     'gobu-ecs.h',
     'gobu-gfx.h',
@@ -58,6 +61,7 @@ libgobu_header = files(
     'gobu-text.h',
     'gobu-texture.h',
     'gobu-audio.h',
+    'gobu.h',
 )
 
 message('Renderer selected: ' + backends_defines[renderer_selected])

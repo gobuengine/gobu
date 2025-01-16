@@ -14,6 +14,7 @@
 
 #include "gobu-input.h"
 #include "gobu-ecs.h"
+#include "gobu-math.h"
 #include "gobu-util.h"
 #include "gobu/gobu-renderer-draw.h"
 #include "gobu/gobu-gfx.h"

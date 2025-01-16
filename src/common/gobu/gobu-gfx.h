@@ -10,7 +10,7 @@
 
 typedef enum go_layer_default
 {
-    GO_LAYER_VOID = 0,
+    GO_LAYER = 0,
     GO_LAYER_BACKGROUND = 1,  // Fondo más lejano, cielos, paisajes estáticos
     GO_LAYER_PARALLAX = 2,    // Elementos de fondo con parallax
     GO_LAYER_MIDGROUND = 3,   // Elementos decorativos del nivel
@@ -30,7 +30,6 @@ typedef struct go_gfx_context_t
     int framebuffer_id;
     go_font_t font_default;
     go_bgfx_context *bctx; // backend context
-    go_camera_t cameraMain;
 } go_gfx_context_t;
 
 go_bgfx_context *go_gfx_context(void);
@@ -39,9 +38,6 @@ void *go_gfx_font_context(void);
 
 go_public void go_gfx_init(go_gfx_context_t *ctx, int width, int height);
 go_public void go_gfx_shutdown(void);
-
-go_public go_camera_t go_gfx_viewport_camera(void);
-go_public void go_gfx_viewport_set_camera(go_camera_t camera);
 
 go_public int go_gfx_viewport_width(void);
 go_public int go_gfx_viewport_height(void);
