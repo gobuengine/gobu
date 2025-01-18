@@ -8,50 +8,7 @@
 
 #include "gapp_project_setting.h"
 
-#define CUSTOM_SIZE_KEY 8
-#define CUSTOM_SIZE_SELECTED 2
-#define DEFAULT_RESOLUTION 4
-
-const char *resolutions[] = {
-    // Retro y clásicas
-    "Low resolution 320x240",
-    "Standard resolution 640x360",
-    "High resolution 800x600",
-
-    // Móviles y tabletas
-    "Mobile portrait 720x1280",
-    "Desktop & Mobile landscape 1280x720",
-    "Tablet portrait 768x1024",
-    "Tablet landscape 1024x768",
-
-    // Modernas
-    "Full HD 1920x1080",
-
-    // Personalizada
-    "Custom size",
-    NULL,
-};
-
-const int resolutions_values[] = {
-    // Retro y clásicas
-    320, 240, // "Low resolution 320x240"
-    640, 360, // "Standard resolution 640x360"
-    800, 600, // "High resolution 800x600"
-
-    // Móviles y tabletas
-    720, 1280, // "Mobile portrait 720x1280"
-    1280, 720, // "Desktop & Mobile landscape 1280x720"
-    768, 1024, // "Tablet portrait 768x1024"
-    1024, 768, // "Tablet landscape 1024x768"
-
-    // Modernas
-    1920, 1080, // "Full HD 1920x1080"
-};
-
-// Resolution selected new project
-static int rSelected = DEFAULT_RESOLUTION, resolutionWidth, resolutionHeight;
-
-struct _GobuProjectManager
+struct _GappProjectManager
 {
     GtkBox parent_instance;
 
@@ -62,68 +19,52 @@ struct _GobuProjectManager
     // custom size
     GtkWidget *customRes[2];
     GtkWidget *customResBox;
+    //
+    int selected_resolution;
+    int resolution_width;
+    int resolution_height;
 };
 
-static void gobu_ui_dialog_new_project(GobuProjectManager *self);
-static void gobu_project_manager_ui_setup(GobuProjectManager *self);
-static void gobu_project_manager_dispose(GObject *object);
+static void gapp_project_manager_ui_dialog_new_project(GappProjectManager *self);
+static void gapp_project_manager_ui_setup(GappProjectManager *self);
+static void gapp_project_manager_dispose(GObject *object);
 
 // MARK: --- BASE CLASS ---
 
-G_DEFINE_TYPE(GobuProjectManager, gobu_project_manager, GTK_TYPE_BOX)
+G_DEFINE_TYPE(GappProjectManager, gapp_project_manager, GTK_TYPE_BOX)
 
-static void gobu_project_manager_class_init(GobuProjectManagerClass *klass)
+static void gapp_project_manager_class_init(GappProjectManagerClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS(klass);
-    object_class->dispose = gobu_project_manager_dispose;
+    object_class->dispose = gapp_project_manager_dispose;
 }
 
-static void gobu_project_manager_dispose(GObject *object)
+static void gapp_project_manager_dispose(GObject *object)
 {
-    GobuProjectManager *self = GOBU_PROJECT_MANAGER(object);
+    GappProjectManager *self = GAPP_PROJECT_MANAGER(object);
 
     g_clear_pointer(&self, gtk_widget_unparent);
 
-    G_OBJECT_CLASS(gobu_project_manager_parent_class)->dispose(object);
+    G_OBJECT_CLASS(gapp_project_manager_parent_class)->dispose(object);
 }
 
-static void gobu_project_manager_init(GobuProjectManager *self)
+static void gapp_project_manager_init(GappProjectManager *self)
 {
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
 
     // config inicial
-    resolutionWidth = resolutions_values[rSelected * 2];
-    resolutionHeight = resolutions_values[rSelected * 2 + 1];
+    self->selected_resolution   = DEFAULT_RESOLUTION;
+    self->resolution_width      = resolutions_values[self->selected_resolution * 2];
+    self->resolution_height     = resolutions_values[self->selected_resolution * 2 + 1];
 
-    gobu_project_manager_ui_setup(self);
+    gapp_project_manager_ui_setup(self);
 }
 
 // --- END CLASS ---
 
 // MARK: PRIVATE FUNC
 
-/**
- * Filters a list of project paths and saves only the valid ones.
- *
- * @param list: Input binn list containing project paths to validate
- *             Each item must be a binn object with a "path" string field
- *
- * @return: A new binn list containing only the valid project paths
- *          or NULL if an error occurs. The caller is responsible for
- *          freeing the returned list.
- *
- * This function:
- * - Validates each path in the input list
- * - Checks for the existence of GAPP_PROJECT_GAME_FILE in each path
- * - Creates a new list with only the valid project paths
- * - Saves the filtered list to the user's config file
- * - Handles memory allocation failures and invalid paths gracefully
- *
- * Side effects:
- * - Writes to the user's config file in GOBU/GAPP_FILE_PROJECTS_NAME
- * - Logs warnings for invalid paths and operation failures
- */
-static binn *gobu_fn_filter_and_save_valid_project_paths(binn *list)
+static binn *gapp_project_manager_fn_filter_and_save_valid_project_paths(binn *list)
 {
     g_return_val_if_fail(list != NULL, NULL);
 
@@ -162,28 +103,10 @@ static binn *gobu_fn_filter_and_save_valid_project_paths(binn *list)
     return list_new;
 }
 
-/**
- * Loads and validates the user's project list from config.
- *
- * @return: A binn list containing valid project paths from the user's
- *          config file. If the config file doesn't exist, returns a new
- *          empty list. Returns NULL on critical errors.
- *
- * This function:
- * - Attempts to load projects from the user's config file
- * - Creates a new empty list if the config file doesn't exist
- * - Filters out any invalid project paths
- * - Updates the config file with only valid projects
- * - Handles file and memory errors gracefully
- *
- * Side effects:
- * - May update the config file if invalid projects are found
- * - Logs warnings for file access and creation failures
- */
-static binn *gobu_fn_load_and_validate_user_projects(void)
+static binn *gapp_project_manager_fn_load_and_validate_user_projects(void)
 {
     binn *list = NULL;
-    gchar *config_file = go_util_path_build(go_util_path_user(), "GOBU", GAPP_FILE_PROJECTS_NAME);
+    g_autofree gchar *config_file = go_util_path_build(go_util_path_user(), "GOBU", GAPP_FILE_PROJECTS_NAME);
 
     if (go_util_path_exist(config_file))
     {
@@ -202,40 +125,17 @@ static binn *gobu_fn_load_and_validate_user_projects(void)
         }
     }
 
-    g_free(config_file);
-
-    return gobu_fn_filter_and_save_valid_project_paths(list);
+    return gapp_project_manager_fn_filter_and_save_valid_project_paths(list);
 }
 
-/**
- * Adds a new project path to the user's config file.
- *
- * @param path: The path to the project to be added. Must not be NULL or empty.
- * @return: TRUE if the project was successfully added, FALSE otherwise.
- *
- * This function:
- * - Creates the config directory if it doesn't exist
- * - Loads existing projects from the config file (if any)
- * - Adds the new project path to the list
- * - Saves the updated project list back to the config file
- * - Handles all cleanup and error cases
- *
- * Side effects:
- * - Creates GOBU config directory if it doesn't exist
- * - Modifies the projects config file
- * - Logs warnings for file operations failures
- *
- * Note: This function doesn't validate if the project at the given path
- * is valid - that's handled when the projects are loaded.
- */
-static gboolean gobu_fn_add_project_to_config(const gchar *path)
+static gboolean gapp_project_manager_fn_add_project_to_config(const gchar *path)
 {
     g_return_val_if_fail(path != NULL && *path != '\0', FALSE);
 
     binn *list = binn_list();
     gboolean success = FALSE;
-    gchar *config_dir = go_util_path_build(go_util_path_user(), "GOBU");
-    gchar *config_file = go_util_path_build(config_dir, GAPP_FILE_PROJECTS_NAME);
+    g_autofree gchar *config_dir = go_util_path_build(go_util_path_user(), "GOBU");
+    g_autofree gchar *config_file = go_util_path_build(config_dir, GAPP_FILE_PROJECTS_NAME);
 
     // Asegurar que el directorio de configuración existe
     if (!go_util_path_create(config_dir))
@@ -272,32 +172,10 @@ static gboolean gobu_fn_add_project_to_config(const gchar *path)
 
 cleanup:
     binn_free(list);
-    g_free(config_dir);
-    g_free(config_file);
     return success;
 }
 
-/**
- * Creates a new GOBU game project with the initial structure and files.
- *
- * @param name: Name of the new project/directory to create. Must not be NULL or empty.
- * @param path: Parent directory where the project will be created. Must not be NULL or empty.
- * @return: TRUE if project was created successfully, FALSE otherwise.
- *
- * This function:
- * - Creates the project directory structure (project_dir/resources)
- * - Initializes a new ECS world with a "Main" scene
- * - Saves the initial game state to GAPP_PROJECT_GAME_FILE
- * - Registers the project in user's config for future loading
- * - Validates inputs and handles existing directories
- *
- * Side effects:
- * - Creates new directories at the specified path
- * - Creates initial game state file
- * - Updates user's project config file
- * - Logs warnings for validation and creation failures
- */
-static gboolean gobu_fn_initialize_game_project(const gchar *name, const gchar *path)
+static gboolean gapp_project_manager_fn_initialize_game_project(const gchar *name, const gchar *path, GappProjectManager *self)
 {
     g_return_val_if_fail(name != NULL && *name != '\0', FALSE);
     g_return_val_if_fail(path != NULL && *path != '\0', FALSE);
@@ -313,13 +191,13 @@ static gboolean gobu_fn_initialize_game_project(const gchar *name, const gchar *
             go_util_path_create(content_dir))
         {
             // WORLD + SCENE INIT
-            go_ecs_init_c(name, resolutionWidth, resolutionHeight);
+            go_ecs_init_c(name, self->resolution_width, self->resolution_height);
             go_ecs_scene_open(go_ecs_scene_new("Main"));
             go_ecs_save_to_file(go_util_path_build(project_dir, GAPP_PROJECT_GAME_FILE));
             // go_ecs_free();
 
             // registramos el proyecto en el archivo de configuración del usuario
-            gobu_fn_add_project_to_config(project_dir);
+            gapp_project_manager_fn_add_project_to_config(project_dir);
 
             return TRUE;
         }
@@ -336,26 +214,10 @@ static gboolean gobu_fn_initialize_game_project(const gchar *name, const gchar *
     return FALSE;
 }
 
-/**
- * Opens the project in the main GOBU editor window.
- *
- * @param path: Path to the project directory to open. Must not be NULL.
- * @param self: The ProjectManager instance. Must be valid.
- * @return: TRUE if editor opened successfully, FALSE on failure.
- *
- * This function:
- * - Gets the current editor instance
- * - Opens the specified project in the editor
- * - Logs debug information about successful opening
- * - Validates input parameters
- *
- * Note: This function assumes the editor instance exists and is ready
- * to receive projects.
- */
-static gboolean gobu_fn_launch_project_editor(const gchar *path, GobuProjectManager *self)
+static gboolean gapp_project_manager_fn_launch_project_editor(const gchar *path, GappProjectManager *self)
 {
     g_return_val_if_fail(path != NULL, FALSE);
-    g_return_val_if_fail(GOBU_IS_PROJECT_MANAGER(self), FALSE);
+    g_return_val_if_fail(GAPP_IS_PROJECT_MANAGER(self), FALSE);
 
     gapp_open_project(gapp_get_editor_instance(), path);
 
@@ -363,22 +225,7 @@ static gboolean gobu_fn_launch_project_editor(const gchar *path, GobuProjectMana
     return TRUE;
 }
 
-/**
- * Checks if a project name contains only allowed characters.
- *
- * @param project_name: The name to validate. Must not be NULL or empty.
- * @return: TRUE if name contains only alphanumeric characters, underscores,
- *          and hyphens. FALSE otherwise.
- *
- * This function:
- * - Checks for NULL or empty strings
- * - Validates that name only contains: [a-zA-Z0-9_-]
- * - Uses strspn() to efficiently check character set
- *
- * Note: The function is case-sensitive and treats upper and lowercase
- * letters as valid but distinct characters.
- */
-static gboolean gobu_fn_is_valid_project_name(const char *project_name)
+static gboolean gapp_project_manager_fn_is_valid_project_name(const char *project_name)
 {
     if (project_name == NULL || *project_name == '\0')
     {
@@ -389,34 +236,21 @@ static gboolean gobu_fn_is_valid_project_name(const char *project_name)
     return strspn(project_name, valid_chars) == strlen(project_name);
 }
 
-/**
- * Callback handler for folder selection in project location dialog.
- * Updates the file chooser button label with the selected path.
- *
- * @param source: The file dialog that triggered the event
- * @param res: The async result of the folder selection
- * @param self: The ProjectManager instance
- *
- * Side effects:
- * - Updates button label with selected path
- * - Logs warnings for selection errors
- */
-static void gobu_fn_handle_project_location_selected(GtkFileDialog *source, GAsyncResult *res, GobuProjectManager *self)
+static void gapp_project_manager_fn_handle_project_location_selected(GtkFileDialog *source, GAsyncResult *res, GappProjectManager *self)
 {
     g_return_if_fail(GTK_IS_FILE_DIALOG(source));
     g_return_if_fail(G_IS_ASYNC_RESULT(res));
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
 
     GError *error = NULL;
     GFile *file = gtk_file_dialog_select_folder_finish(source, res, &error);
 
     if (error == NULL && file != NULL)
     {
-        char *path = g_file_get_path(file);
+        g_autofree gchar *path = g_file_get_path(file);
         if (path != NULL)
         {
             gtk_button_set_label(GTK_BUTTON(self->btn_file_chooser), path);
-            g_free(path);
         }
         g_object_unref(file);
     }
@@ -427,54 +261,26 @@ static void gobu_fn_handle_project_location_selected(GtkFileDialog *source, GAsy
     }
 }
 
-/**
- * Callback handler for project selection in open dialog.
- * Opens the selected project in the editor and adds it to config.
- *
- * @param source: The file dialog that triggered the event
- * @param result: The async result of the file selection
- * @param self: The ProjectManager instance
- *
- * Side effects:
- * - Launches project editor if selection is valid
- * - Updates project config with selected project
- */
-static void gobu_fn_handle_project_open_selected(GObject *source, GAsyncResult *result, GobuProjectManager *self)
+static void gapp_project_manager_fn_handle_project_open_selected(GObject *source, GAsyncResult *result, GappProjectManager *self)
 {
     GtkFileDialog *dialog = GTK_FILE_DIALOG(source);
     GFile *file = gtk_file_dialog_open_finish(dialog, result, NULL);
     if (file)
     {
         g_autofree gchar *filename = g_file_get_path(file);
-        if (gobu_fn_launch_project_editor(filename, self))
+        if (gapp_project_manager_fn_launch_project_editor(filename, self))
         {
-            gobu_fn_add_project_to_config(go_util_path_dirname(filename));
+            gapp_project_manager_fn_add_project_to_config(go_util_path_dirname(filename));
         }
 
-        // g_free(filename);
         g_object_unref(file);
     }
 }
 
-/**
- * Creates a string list model of project Content paths for the grid view.
- *
- * @return: A new GtkStringList containing paths to the Content directory
- *          of each valid project. The caller owns the returned list.
- *
- * This function:
- * - Loads the list of valid user projects
- * - Extracts the path from each project
- * - Builds the Content subdirectory path for each project
- * - Creates a GTK string list model with these paths
- *
- * Note: Projects without a valid path or Content directory will be
- * skipped in the resulting list.
- */
-static GtkStringList *gobu_fn_create_project_paths_model(void)
+static GtkStringList *gapp_project_manager_fn_create_project_paths_model(void)
 {
     GtkStringList *sl = gtk_string_list_new(NULL);
-    binn *list = gobu_fn_load_and_validate_user_projects();
+    binn *list = gapp_project_manager_fn_load_and_validate_user_projects();
 
     if (list != NULL)
     {
@@ -497,7 +303,7 @@ static GtkStringList *gobu_fn_create_project_paths_model(void)
 
 // MARK:SIGNAL
 
-static void gobu_s_item_factory_setup_item(GtkListItemFactory *factory, GtkListItem *list_item, gpointer user_data)
+static void gapp_project_manager_on_item_factory_setup_item(GtkListItemFactory *factory, GtkListItem *list_item, gpointer user_data)
 {
     g_return_if_fail(GTK_IS_LIST_ITEM_FACTORY(factory));
     g_return_if_fail(GTK_IS_LIST_ITEM(list_item));
@@ -523,7 +329,7 @@ static void gobu_s_item_factory_setup_item(GtkListItemFactory *factory, GtkListI
     gtk_box_append(GTK_BOX(box), label);
 }
 
-static void gobu_s_item_factory_bind_item(GtkListItemFactory *factory, GtkListItem *list_item, gpointer user_data)
+static void gapp_project_manager_on_item_factory_bind_item(GtkListItemFactory *factory, GtkListItem *list_item, gpointer user_data)
 {
     g_return_if_fail(GTK_IS_LIST_ITEM(list_item));
 
@@ -545,7 +351,7 @@ static void gobu_s_item_factory_bind_item(GtkListItemFactory *factory, GtkListIt
     const char *path_project = go_util_path_dirname(gtk_string_object_get_string(obj));
 
     // Configurar la imagen
-    gchar *thumbnail_path = go_util_path_build(path_project, GAPP_PROJECT_MANAGER_PREVIEW);
+    g_autofree gchar *thumbnail_path = go_util_path_build(path_project, GAPP_PROJECT_MANAGER_PREVIEW);
     if (go_util_path_exist(thumbnail_path))
     {
         gtk_image_set_from_file(GTK_IMAGE(image), thumbnail_path);
@@ -554,47 +360,44 @@ static void gobu_s_item_factory_bind_item(GtkListItemFactory *factory, GtkListIt
     {
         gtk_image_set_from_icon_name(GTK_IMAGE(image), GAPP_PROJECT_MANAGER_ICON);
     }
-    g_free(thumbnail_path);
 
     // Configurar la etiqueta y el tooltip
     gtk_label_set_text(GTK_LABEL(label), go_util_path_basename(path_project));
     gtk_widget_set_tooltip_text(box, path_project);
 }
 
-static void gobu_s_btn_file_chooser_clicked(GtkWidget *button, GobuProjectManager *self)
+static void gapp_project_manager_on_btn_file_chooser_clicked(GtkWidget *button, GappProjectManager *self)
 {
     g_return_if_fail(GTK_IS_WIDGET(button));
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
 
     GtkFileDialog *dialog = gtk_file_dialog_new();
     gtk_file_dialog_select_folder(GTK_FILE_DIALOG(dialog),
                                   GTK_WINDOW(self),
                                   NULL,
-                                  gobu_fn_handle_project_location_selected,
+                                  gapp_project_manager_fn_handle_project_location_selected,
                                   self);
 }
 
-static void gobu_s_open_dialog_new_project_clicked(GtkWidget *button, GobuProjectManager *self)
+static void gapp_project_manager_on_open_dialog_new_project_clicked(GtkWidget *button, GappProjectManager *self)
 {
     g_return_if_fail(GTK_IS_WIDGET(button));
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
-
-    g_debug("Abriendo diálogo para crear nuevo proyecto");
-    gobu_ui_dialog_new_project(self);
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
+    gapp_project_manager_ui_dialog_new_project(self);
 }
 
-static void gobu_s_create_project_clicked(GtkWidget *button, GobuProjectManager *self)
+static void gapp_project_manager_on_create_project_clicked(GtkWidget *button, GappProjectManager *self)
 {
     g_return_if_fail(GTK_IS_WIDGET(button));
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
 
     const gchar *name = gtk_editable_get_text(GTK_EDITABLE(self->entry_name));
     const gchar *path = gtk_button_get_label(GTK_BUTTON(self->btn_file_chooser));
 
-    gboolean is_created = gobu_fn_initialize_game_project(name, path);
+    gboolean is_created = gapp_project_manager_fn_initialize_game_project(name, path, self);
 
     if (is_created)
-        gobu_fn_launch_project_editor(go_util_path_build(path, name, GAPP_PROJECT_MANAGER_FILE), self);
+        gapp_project_manager_fn_launch_project_editor(go_util_path_build(path, name, GAPP_PROJECT_MANAGER_FILE), self);
     else
     {
         g_warning("Falló la creación del proyecto");
@@ -604,7 +407,7 @@ static void gobu_s_create_project_clicked(GtkWidget *button, GobuProjectManager 
     gtk_window_close(GTK_WINDOW(gtk_widget_get_ancestor(button, GTK_TYPE_WINDOW)));
 }
 
-static void gobu_s_list_project_activated(GtkGridView *grid_view, guint position, GobuProjectManager *self)
+static void gapp_project_manager_on_list_project_activated(GtkGridView *grid_view, guint position, GappProjectManager *self)
 {
     GtkSelectionModel *select_model = gtk_grid_view_get_model(grid_view);
     g_return_if_fail(GTK_IS_SELECTION_MODEL(select_model));
@@ -614,14 +417,12 @@ static void gobu_s_list_project_activated(GtkGridView *grid_view, guint position
     g_return_if_fail(GTK_IS_STRING_OBJECT(obj));
     const char *path_project = go_util_path_dirname(gtk_string_object_get_string(obj));
 
-    gobu_fn_launch_project_editor(go_util_path_build(path_project, GAPP_PROJECT_MANAGER_FILE), self);
+    gapp_project_manager_fn_launch_project_editor(go_util_path_build(path_project, GAPP_PROJECT_MANAGER_FILE), self);
 }
 
-static void gobu_s_open_other_project_clicked(GtkWidget *button, GobuProjectManager *self)
+static void gapp_project_manager_on_open_other_project_clicked(GtkWidget *button, GappProjectManager *self)
 {
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
-
-    g_debug("Abriendo diálogo para seleccionar proyecto: %p", (void *)self);
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
 
     GtkFileDialog *dialog = gtk_file_dialog_new();
     GtkRoot *root = gtk_widget_get_root(button);
@@ -629,22 +430,20 @@ static void gobu_s_open_other_project_clicked(GtkWidget *button, GobuProjectMana
     gtk_file_dialog_open(dialog,
                          GTK_WINDOW(root),
                          NULL,
-                         gobu_fn_handle_project_open_selected,
+                         gapp_project_manager_fn_handle_project_open_selected,
                          self);
-
-    g_debug("Diálogo de selección de proyecto abierto");
 }
 
-static void gobu_s_entry_name_changed(GtkWidget *entry, GobuProjectManager *self)
+static void gapp_project_manager_on_entry_name_changed(GtkWidget *entry, GappProjectManager *self)
 {
     g_return_if_fail(GTK_IS_ENTRY(entry));
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
 
     const char *name = gtk_editable_get_text(GTK_EDITABLE(self->entry_name));
     const char *path = gtk_button_get_label(GTK_BUTTON(self->btn_file_chooser));
-    g_autofree char *project_dir = go_util_path_build(path, name);
+    g_autofree gchar *project_dir = go_util_path_build(path, name);
 
-    gboolean name_is_valid = gobu_fn_is_valid_project_name(name);
+    gboolean name_is_valid = gapp_project_manager_fn_is_valid_project_name(name);
     gboolean dir_not_exists = !go_util_path_exist(project_dir);
     gboolean is_valid = name_is_valid && dir_not_exists;
 
@@ -675,30 +474,30 @@ static void gobu_s_entry_name_changed(GtkWidget *entry, GobuProjectManager *self
     g_debug("Nombre de proyecto: %s, Válido: %s", name, is_valid ? "Sí" : "No");
 }
 
-static void gobu_project_manager_on_activate_resolution(GtkDropDown *drop_down, GParamSpec *pspec, GobuProjectManager *self)
+static void gapp_project_manager_on_activate_resolution(GtkDropDown *drop_down, GParamSpec *pspec, GappProjectManager *self)
 {
-    rSelected = gtk_drop_down_get_selected(drop_down);
+    self->selected_resolution = gtk_drop_down_get_selected(drop_down);
     // seleccionamos la resolución
-    resolutionWidth = resolutions_values[rSelected * 2];
-    resolutionHeight = resolutions_values[rSelected * 2 + 1];
+    self->resolution_width = resolutions_values[self->selected_resolution * 2];
+    self->resolution_height = resolutions_values[self->selected_resolution * 2 + 1];
     // si seleccionamos el custom size, mostramos los spinButton
-    gtk_widget_set_visible(self->customResBox, rSelected == CUSTOM_SIZE_KEY);
+    gtk_widget_set_visible(self->customResBox, self->selected_resolution == CUSTOM_SIZE_KEY);
 }
 
-static void gobu_project_manager_on_activate_resolution_custom(GtkSpinButton *spin_button, GobuProjectManager *self)
+static void gapp_project_manager_on_activate_resolution_custom(GtkSpinButton *spin_button, GappProjectManager *self)
 {
     guint index = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(spin_button), "index"));
     guint value = gtk_spin_button_get_value_as_int(spin_button);
 
     if (index == 0)
-        resolutionWidth = value;
+        self->resolution_width = value;
     else
-        resolutionHeight = value;
+        self->resolution_height = value;
 }
 
 // MARK: UI
 
-static void gobu_ui_dialog_new_project(GobuProjectManager *self)
+static void gapp_project_manager_ui_dialog_new_project(GappProjectManager *self)
 {
     GtkWidget *win, *vbox, *hbox, *label, *btn_create;
 
@@ -730,7 +529,7 @@ static void gobu_ui_dialog_new_project(GobuProjectManager *self)
     self->entry_name = gtk_entry_new();
     gtk_entry_set_placeholder_text(GTK_ENTRY(self->entry_name), "New Project");
     gtk_box_append(GTK_BOX(vbox), self->entry_name);
-    g_signal_connect(self->entry_name, "changed", G_CALLBACK(gobu_s_entry_name_changed), self);
+    g_signal_connect(self->entry_name, "changed", G_CALLBACK(gapp_project_manager_on_entry_name_changed), self);
 
     // Lista de resoluciones de pantalla
     label = gtk_label_new("Screen Resolution:");
@@ -738,9 +537,9 @@ static void gobu_ui_dialog_new_project(GobuProjectManager *self)
     gtk_box_append(GTK_BOX(vbox), GTK_WIDGET(label));
 
     self->dresolutions = gtk_drop_down_new_from_strings(resolutions);
-    gtk_drop_down_set_selected(GTK_DROP_DOWN(self->dresolutions), rSelected);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(self->dresolutions), self->selected_resolution);
     gtk_box_append(GTK_BOX(vbox), self->dresolutions);
-    g_signal_connect(self->dresolutions, "notify::selected", G_CALLBACK(gobu_project_manager_on_activate_resolution), self);
+    g_signal_connect(self->dresolutions, "notify::selected", G_CALLBACK(gapp_project_manager_on_activate_resolution), self);
 
     // Custom size
     self->customResBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -754,7 +553,7 @@ static void gobu_ui_dialog_new_project(GobuProjectManager *self)
             gtk_widget_set_hexpand(self->customRes[i], TRUE);
             g_object_set_data(G_OBJECT(self->customRes[i]), "index", GUINT_TO_POINTER(i));
             gtk_box_append(GTK_BOX(self->customResBox), self->customRes[i]);
-            g_signal_connect(self->customRes[i], "value-changed", G_CALLBACK(gobu_project_manager_on_activate_resolution_custom), self);
+            g_signal_connect(self->customRes[i], "value-changed", G_CALLBACK(gapp_project_manager_on_activate_resolution_custom), self);
         }
     }
 
@@ -765,7 +564,7 @@ static void gobu_ui_dialog_new_project(GobuProjectManager *self)
 
     self->btn_file_chooser = gtk_button_new_with_label(pathProjects);
     gtk_box_append(GTK_BOX(vbox), self->btn_file_chooser);
-    g_signal_connect(self->btn_file_chooser, "clicked", G_CALLBACK(gobu_s_btn_file_chooser_clicked), self);
+    g_signal_connect(self->btn_file_chooser, "clicked", G_CALLBACK(gapp_project_manager_on_btn_file_chooser_clicked), self);
 
     // Añadir botón de creación
     hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
@@ -777,14 +576,14 @@ static void gobu_ui_dialog_new_project(GobuProjectManager *self)
     gtk_widget_set_sensitive(GTK_WIDGET(self->dialog_btn_create), FALSE);
     gtk_box_append(GTK_BOX(hbox), self->dialog_btn_create);
     gtk_widget_add_css_class(self->dialog_btn_create, "suggested-action");
-    g_signal_connect(self->dialog_btn_create, "clicked", G_CALLBACK(gobu_s_create_project_clicked), self);
+    g_signal_connect(self->dialog_btn_create, "clicked", G_CALLBACK(gapp_project_manager_on_create_project_clicked), self);
 
     gtk_window_present(GTK_WINDOW(win));
 }
 
-static void gobu_project_manager_ui_setup(GobuProjectManager *self)
+static void gapp_project_manager_ui_setup(GappProjectManager *self)
 {
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
+    g_return_if_fail(GAPP_IS_PROJECT_MANAGER(self));
 
     GtkWidget *hbox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
     gtk_widget_set_margin_top(hbox, 5);
@@ -796,12 +595,12 @@ static void gobu_project_manager_ui_setup(GobuProjectManager *self)
         GtkWidget *btn_new = gapp_widget_button_new_icon_with_label("window-new-symbolic", "New");
         gtk_button_set_has_frame(GTK_BUTTON(btn_new), TRUE);
         gtk_box_append(GTK_BOX(hbox), btn_new);
-        g_signal_connect(btn_new, "clicked", G_CALLBACK(gobu_s_open_dialog_new_project_clicked), self);
+        g_signal_connect(btn_new, "clicked", G_CALLBACK(gapp_project_manager_on_open_dialog_new_project_clicked), self);
 
         GtkWidget *btn_open = gapp_widget_button_new_icon_with_label("document-open-symbolic", "Open other");
         gtk_button_set_has_frame(GTK_BUTTON(btn_open), TRUE);
         gtk_box_append(GTK_BOX(hbox), btn_open);
-        g_signal_connect(btn_open, "clicked", G_CALLBACK(gobu_s_open_other_project_clicked), self);
+        g_signal_connect(btn_open, "clicked", G_CALLBACK(gapp_project_manager_on_open_other_project_clicked), self);
     }
 
     GtkWidget *search = gtk_search_entry_new();
@@ -811,7 +610,7 @@ static void gobu_project_manager_ui_setup(GobuProjectManager *self)
         GtkWidget *scroll = gtk_scrolled_window_new();
         gtk_box_append(GTK_BOX(self), scroll);
         {
-            GtkStringList *sl = gobu_fn_create_project_paths_model();
+            GtkStringList *sl = gapp_project_manager_fn_create_project_paths_model();
 
             GtkFilter *filter = GTK_FILTER(gtk_string_filter_new(gtk_property_expression_new(GTK_TYPE_STRING_OBJECT, NULL, "string")));
             GtkFilterListModel *filter_model = gtk_filter_list_model_new(G_LIST_MODEL(sl), filter);
@@ -821,28 +620,19 @@ static void gobu_project_manager_ui_setup(GobuProjectManager *self)
             GtkSingleSelection *selection = gtk_single_selection_new(G_LIST_MODEL(filter_model));
 
             GtkListItemFactory *factory = gtk_signal_list_item_factory_new();
-            g_signal_connect(factory, "setup", G_CALLBACK(gobu_s_item_factory_setup_item), NULL);
-            g_signal_connect(factory, "bind", G_CALLBACK(gobu_s_item_factory_bind_item), NULL);
+            g_signal_connect(factory, "setup", G_CALLBACK(gapp_project_manager_on_item_factory_setup_item), NULL);
+            g_signal_connect(factory, "bind", G_CALLBACK(gapp_project_manager_on_item_factory_bind_item), NULL);
 
             GtkWidget *grid = gtk_grid_view_new(GTK_SELECTION_MODEL(selection), factory);
             gtk_widget_set_vexpand(grid, TRUE);
             gtk_scrolled_window_set_child(GTK_SCROLLED_WINDOW(scroll), grid);
-            g_signal_connect(grid, "activate", G_CALLBACK(gobu_s_list_project_activated), self);
+            g_signal_connect(grid, "activate", G_CALLBACK(gapp_project_manager_on_list_project_activated), self);
         }
     }
 }
 
 // --- MARK:BEGIN API ---
-
-GobuProjectManager *gobu_project_manager_new(void)
+GappProjectManager *gapp_project_manager_new(void)
 {
-    return g_object_new(GOBU_TYPE_PROJECT_MANAGER, "orientation", GTK_ORIENTATION_VERTICAL, NULL);
+    return g_object_new(GAPP_TYPE_PROJECT_MANAGER, "orientation", GTK_ORIENTATION_VERTICAL, NULL);
 }
-
-void gobu_project_manager_show(GobuProjectManager *self)
-{
-    g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
-    // gtk_window_present(GTK_WINDOW(self));
-}
-
-// --- END API ---

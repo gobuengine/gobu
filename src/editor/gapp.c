@@ -305,7 +305,7 @@ static GtkWidget *gapp_module_editor(GappMain *app)
 
 static GtkWidget *gapp_module_project_manager(GappMain *app)
 {
-    app->project_manager = gobu_project_manager_new();
+    app->project_manager = gapp_project_manager_new();
     return app->project_manager;
 }
 
