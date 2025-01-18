@@ -8,13 +8,60 @@
 
 #include "gapp_project_setting.h"
 
+#define CUSTOM_SIZE_KEY 8
+#define CUSTOM_SIZE_SELECTED 2
+#define DEFAULT_RESOLUTION 4
+
+const char *resolutions[] = {
+    // Retro y clásicas
+    "Low resolution 320x240",
+    "Standard resolution 640x360",
+    "High resolution 800x600",
+
+    // Móviles y tabletas
+    "Mobile portrait 720x1280",
+    "Desktop & Mobile landscape 1280x720",
+    "Tablet portrait 768x1024",
+    "Tablet landscape 1024x768",
+
+    // Modernas
+    "Full HD 1920x1080",
+
+    // Personalizada
+    "Custom size",
+    NULL,
+};
+
+const int resolutions_values[] = {
+    // Retro y clásicas
+    320, 240, // "Low resolution 320x240"
+    640, 360, // "Standard resolution 640x360"
+    800, 600, // "High resolution 800x600"
+
+    // Móviles y tabletas
+    720, 1280, // "Mobile portrait 720x1280"
+    1280, 720, // "Desktop & Mobile landscape 1280x720"
+    768, 1024, // "Tablet portrait 768x1024"
+    1024, 768, // "Tablet landscape 1024x768"
+
+    // Modernas
+    1920, 1080, // "Full HD 1920x1080"
+};
+
+// Resolution selected new project
+static int rSelected = DEFAULT_RESOLUTION, resolutionWidth, resolutionHeight;
+
 struct _GobuProjectManager
 {
     GtkBox parent_instance;
 
     GtkWidget *entry_name;
+    GtkWidget *dresolutions;
     GtkWidget *btn_file_chooser;
     GtkWidget *dialog_btn_create;
+    // custom size
+    GtkWidget *customRes[2];
+    GtkWidget *customResBox;
 };
 
 static void gobu_ui_dialog_new_project(GobuProjectManager *self);
@@ -43,6 +90,11 @@ static void gobu_project_manager_dispose(GObject *object)
 static void gobu_project_manager_init(GobuProjectManager *self)
 {
     g_return_if_fail(GOBU_IS_PROJECT_MANAGER(self));
+
+    // config inicial
+    resolutionWidth = resolutions_values[rSelected * 2];
+    resolutionHeight = resolutions_values[rSelected * 2 + 1];
+
     gobu_project_manager_ui_setup(self);
 }
 
@@ -261,11 +313,10 @@ static gboolean gobu_fn_initialize_game_project(const gchar *name, const gchar *
             go_util_path_create(content_dir))
         {
             // WORLD + SCENE INIT
-            go_ecs_init();
-            gapp_project_settings_set_name(name);
+            go_ecs_init_c(name, resolutionWidth, resolutionHeight);
             go_ecs_scene_open(go_ecs_scene_new("Main"));
             go_ecs_save_to_file(go_util_path_build(project_dir, GAPP_PROJECT_GAME_FILE));
-            go_ecs_free();
+            // go_ecs_free();
 
             // registramos el proyecto en el archivo de configuración del usuario
             gobu_fn_add_project_to_config(project_dir);
@@ -540,15 +591,10 @@ static void gobu_s_create_project_clicked(GtkWidget *button, GobuProjectManager 
     const gchar *name = gtk_editable_get_text(GTK_EDITABLE(self->entry_name));
     const gchar *path = gtk_button_get_label(GTK_BUTTON(self->btn_file_chooser));
 
-    g_debug("Intentando crear proyecto '%s' en '%s'", name, path);
-
     gboolean is_created = gobu_fn_initialize_game_project(name, path);
 
     if (is_created)
-    {
-        g_debug("Proyecto creado exitosamente");
         gobu_fn_launch_project_editor(go_util_path_build(path, name, GAPP_PROJECT_MANAGER_FILE), self);
-    }
     else
     {
         g_warning("Falló la creación del proyecto");
@@ -629,6 +675,27 @@ static void gobu_s_entry_name_changed(GtkWidget *entry, GobuProjectManager *self
     g_debug("Nombre de proyecto: %s, Válido: %s", name, is_valid ? "Sí" : "No");
 }
 
+static void gobu_project_manager_on_activate_resolution(GtkDropDown *drop_down, GParamSpec *pspec, GobuProjectManager *self)
+{
+    rSelected = gtk_drop_down_get_selected(drop_down);
+    // seleccionamos la resolución
+    resolutionWidth = resolutions_values[rSelected * 2];
+    resolutionHeight = resolutions_values[rSelected * 2 + 1];
+    // si seleccionamos el custom size, mostramos los spinButton
+    gtk_widget_set_visible(self->customResBox, rSelected == CUSTOM_SIZE_KEY);
+}
+
+static void gobu_project_manager_on_activate_resolution_custom(GtkSpinButton *spin_button, GobuProjectManager *self)
+{
+    guint index = GPOINTER_TO_UINT(g_object_get_data(G_OBJECT(spin_button), "index"));
+    guint value = gtk_spin_button_get_value_as_int(spin_button);
+
+    if (index == 0)
+        resolutionWidth = value;
+    else
+        resolutionHeight = value;
+}
+
 // MARK: UI
 
 static void gobu_ui_dialog_new_project(GobuProjectManager *self)
@@ -664,6 +731,32 @@ static void gobu_ui_dialog_new_project(GobuProjectManager *self)
     gtk_entry_set_placeholder_text(GTK_ENTRY(self->entry_name), "New Project");
     gtk_box_append(GTK_BOX(vbox), self->entry_name);
     g_signal_connect(self->entry_name, "changed", G_CALLBACK(gobu_s_entry_name_changed), self);
+
+    // Lista de resoluciones de pantalla
+    label = gtk_label_new("Screen Resolution:");
+    gtk_label_set_xalign(GTK_LABEL(label), 0.0);
+    gtk_box_append(GTK_BOX(vbox), GTK_WIDGET(label));
+
+    self->dresolutions = gtk_drop_down_new_from_strings(resolutions);
+    gtk_drop_down_set_selected(GTK_DROP_DOWN(self->dresolutions), rSelected);
+    gtk_box_append(GTK_BOX(vbox), self->dresolutions);
+    g_signal_connect(self->dresolutions, "notify::selected", G_CALLBACK(gobu_project_manager_on_activate_resolution), self);
+
+    // Custom size
+    self->customResBox = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 5);
+    gtk_widget_set_visible(self->customResBox, FALSE);
+    gtk_box_append(GTK_BOX(vbox), self->customResBox);
+    {
+        for (int i = 0; i < 2; i++)
+        {
+            self->customRes[i] = gtk_spin_button_new_with_range(0, 9999, 1);
+            gtk_spin_button_set_value(GTK_SPIN_BUTTON(self->customRes[i]), resolutions_values[CUSTOM_SIZE_SELECTED * 2 + i]);
+            gtk_widget_set_hexpand(self->customRes[i], TRUE);
+            g_object_set_data(G_OBJECT(self->customRes[i]), "index", GUINT_TO_POINTER(i));
+            gtk_box_append(GTK_BOX(self->customResBox), self->customRes[i]);
+            g_signal_connect(self->customRes[i], "value-changed", G_CALLBACK(gobu_project_manager_on_activate_resolution_custom), self);
+        }
+    }
 
     // Añadir campo para la ruta del proyecto
     label = gtk_label_new("Project Path:");

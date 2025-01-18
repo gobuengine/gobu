@@ -267,6 +267,7 @@ static GtkWidget *gapp_inspector_create_size_field(ecs_meta_cursor_t cursor)
     GtkWidget *box = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 1);
 
     GtkWidget *number_spinw = gtk_spin_button_new_with_range(INTMAX_MIN, INTMAX_MAX, 0.1);
+    gapp_widget_set_noscroll_focus(number_spinw);
     gtk_widget_set_valign(number_spinw, GTK_ALIGN_CENTER);
     gtk_widget_set_hexpand(number_spinw, TRUE);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(number_spinw), field->width);
@@ -276,6 +277,7 @@ static GtkWidget *gapp_inspector_create_size_field(ecs_meta_cursor_t cursor)
     gtk_box_append(GTK_BOX(box), number_spinw);
 
     GtkWidget *number_spinh = gtk_spin_button_new_with_range(INTMAX_MIN, INTMAX_MAX, 0.1);
+    gapp_widget_set_noscroll_focus(number_spinh);
     gtk_widget_set_valign(number_spinh, GTK_ALIGN_CENTER);
     gtk_widget_set_hexpand(number_spinh, TRUE);
     gtk_spin_button_set_value(GTK_SPIN_BUTTON(number_spinh), field->height);

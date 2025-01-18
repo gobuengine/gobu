@@ -48,13 +48,14 @@ go_extern ECS_COMPONENT_DECLARE(go_comp_circle_t);
 go_extern ECS_COMPONENT_DECLARE(go_comp_rectangle_t);
 
 go_public void go_ecs_init(void);
+go_public void go_ecs_init_c(const char *name, int width, int height);
 go_public ecs_world_t *go_ecs_world(void);
 go_public void go_ecs_free(void);
 go_public void go_ecs_process(float deltaTime);
 go_public void go_ecs_save_to_file(const char *filename);
 bool go_ecs_load_from_file(const char *filename);
 
-go_public void go_ecs_project_settings_init(const char *name);
+go_public void go_ecs_project_settings_init(const char *name, int width, int height);
 go_public ecs_entity_t go_ecs_project_settings(void);
 
 go_public ecs_entity_t go_ecs_entity_new_low(ecs_entity_t parent);

@@ -352,15 +352,17 @@ void gapp_open_project(GappMain *self, const gchar *path)
 
     gapp_set_project_path(go_util_path_dirname(path));
 
-    gtk_stack_set_visible_child_name(GTK_STACK(self->stack), "editor");
-    gapp_headerbar_set_button_visible(self, TRUE);
-
     // cargamos el world del proyecto
     if (!go_ecs_load_from_file(go_util_path_build(gapp_get_project_path(), GAPP_PROJECT_GAME_FILE)))
     {
         g_warning("Failed to load project world");
-    }else 
-        go_ecs_scene_reload();
+        return;
+    }
+
+    go_ecs_scene_reload();
+
+    gtk_stack_set_visible_child_name(GTK_STACK(self->stack), "editor");
+    gapp_headerbar_set_button_visible(self, TRUE);
 
     g_autofree gchar *title = go_util_string_format("%s - %s", GAPP_VERSION_STR, gapp_project_settings_name());
     gtk_label_set_text(GTK_LABEL(self->title_window), title);

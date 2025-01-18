@@ -62,7 +62,7 @@ static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int heigh
     go_core_scene_rendering *rendering = ecs_get_mut(go_ecs_world(), projectSettings, go_core_scene_rendering);
     go_color_t gridColor = go_color_adjust_contrast(scene->color, 0.1f);
 
-    if (go_mouse_is_down(GO_MOUSEBUTTON_LEFT))
+    if (go_mouse_is_down(GO_MOUSEBUTTON_MIDDLE))
     {
         go_vec2_t delta = go_mouse_delta();
         delta = go_math_vec2_scale(delta, -1.0f / sceneViewport->camera.zoom);

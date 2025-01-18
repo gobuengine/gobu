@@ -2,7 +2,7 @@
 #include "gobu-util.h"
 #include <glib.h>
 
-go_internal void gobucoreImport(ecs_world_t *world);
+go_internal void gobuImport(ecs_world_t *world);
 go_internal go_core_scene_phases_t gbCoreScenePhases;
 
 // Esta es la entidad que guarda la confi del proyecto abierto.
@@ -83,14 +83,19 @@ go_internal const char *go_ecs_create_property(const char *name, ecs_entity_t pa
 // -----------------
 go_public void go_ecs_init(void)
 {
+    go_ecs_init_c("New Project", 800, 600);
+}
+
+go_public void go_ecs_init_c(const char *name, int width, int height)
+{
     uworld = ecs_init();
-    ECS_IMPORT(uworld, gobucore);
+    ECS_IMPORT(uworld, gobu);
 
     // Esto es para crear el project settings siempre
     // esto ayuda a que siempre exista un project settings
     // con valores por defecto y si se agrega un valor nuevo
     // se actualizara en el archivo de proyecto.
-    go_ecs_project_settings_init("New Project");
+    go_ecs_project_settings_init(name, width, height);
 }
 
 ecs_world_t *go_ecs_world(void)
@@ -124,15 +129,16 @@ go_public bool go_ecs_load_from_file(const char *filename)
 // -----------------
 // NOTE MARK: project settings
 // -----------------
-go_public void go_ecs_project_settings_init(const char *name)
+go_public void go_ecs_project_settings_init(const char *name, int width, int height)
 {
+    if (projectSettings > 0)
+        ecs_delete(uworld, projectSettings);
+
     projectSettings = ecs_new_low_id(uworld);
     // ecs_set_name(ecs, projectSettings, go_util_string("ProjectSettings"));
 
     ecs_set(uworld, projectSettings, go_core_project_settings1_t, {
         .name = go_util_string(name),
-        .description = go_util_string(""),
-        .author = go_util_string("")
     });
 
     ecs_set(uworld, projectSettings, go_core_project_settings2_t, {
@@ -142,7 +148,7 @@ go_public void go_ecs_project_settings_init(const char *name)
     });
 
     ecs_set(uworld, projectSettings, go_core_scene_rendering, {
-        .resolution = {1280, 720},
+        .resolution = {width, height},
         .targetFps = 60,
         .resolutionMode = GB_RESIZE_MODE_NO_CHANGE,
         .scaleMode = GB_SCALE_MODE_LINEAR
@@ -420,9 +426,9 @@ go_internal void gobu_core_scene_render_post_draw(ecs_iter_t *it)
     }
 }
 
-go_internal void gobucoreImport(ecs_world_t *world)
+go_internal void gobuImport(ecs_world_t *world)
 {
-    ECS_MODULE(world, gobucore);
+    ECS_MODULE(world, gobu);
 
     ECS_TAG_DEFINE(world, gbTagScene);
     ECS_TAG_DEFINE(world, gbOnSceneOpen);

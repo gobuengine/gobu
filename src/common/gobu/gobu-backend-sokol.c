@@ -246,9 +246,6 @@ go_public void go_bgfx_rotate(float angle)
 
 go_public void go_bgfx_layer(int layer)
 {
-    // if (layer > go_gfxctx.layer)
-    //     go_gfxctx.layer = layer;
-
     sgl_layer(layer);
 }
 

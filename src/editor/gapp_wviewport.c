@@ -23,6 +23,7 @@ static void gapp_widget_viewport_on_scroll(GtkEventControllerScroll *controller,
 static void gapp_widget_viewport_on_motion(GtkEventControllerMotion *controller, double x, double y, GappViewport *self);
 static void gapp_widget_viewport_on_mouse_button_pressed(GtkGestureClick *controller, gint n_press, double x, double y, GappViewport *self);
 static void gapp_widget_viewport_on_mouse_button_released(GtkGestureClick *controller, gint n_press, double x, double y, GappViewport *self);
+static guint gapp_widget_viewport_mouse_button_convert(guint button);
 
 G_DEFINE_TYPE(GappViewport, gapp_widget_viewport, GTK_TYPE_GL_AREA)
 
@@ -149,14 +150,29 @@ static void gapp_widget_viewport_on_motion(GtkEventControllerMotion *controller,
 
 static void gapp_widget_viewport_on_mouse_button_pressed(GtkGestureClick *controller, gint n_press, double x, double y, GappViewport *self)
 {
-    guint mouse_button = (gtk_gesture_single_get_current_button(controller) - 1);
+    guint mouse_button = gapp_widget_viewport_mouse_button_convert(gtk_gesture_single_get_current_button(controller));
     go_event_mouse_set_buttons(mouse_button, GO_EVENT_MOUSE_DOWN);
 }
 
 static void gapp_widget_viewport_on_mouse_button_released(GtkGestureClick *controller, gint n_press, double x, double y, GappViewport *self)
 {
-    guint mouse_button = (gtk_gesture_single_get_current_button(controller) - 1);
+    guint mouse_button = gapp_widget_viewport_mouse_button_convert(gtk_gesture_single_get_current_button(controller));
     go_event_mouse_set_buttons(mouse_button, GO_EVENT_MOUSE_UP);
+}
+
+static guint gapp_widget_viewport_mouse_button_convert(guint button)
+{
+    switch (button)
+    {
+    case 1:
+        return GO_MOUSEBUTTON_LEFT;
+    case 2:
+        return GO_MOUSEBUTTON_MIDDLE;
+    case 3:
+        return GO_MOUSEBUTTON_RIGHT;
+    default:
+        return 0;
+    }
 }
 
 // -- BEGIN API PUBLIC
