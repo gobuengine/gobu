@@ -111,7 +111,9 @@
         "gobu-gfx-internal.h": "c",
         "gobu-util.h": "c",
         "gobu-texture.h": "c",
-        "gobu-backend-sokol.h": "c"
+        "gobu-backend-sokol.h": "c",
+        "gobu-ecs-template.h": "c",
+        "gobu-ecs.h": "c"
     },
     "mesonbuild.configureOnOpen": false
 }

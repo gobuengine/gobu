@@ -11,8 +11,10 @@ struct _GappSceneViewport
     go_camera_t camera;
 };
 
-static void gapp_scene_viewport_ready(GtkWidget *viewport, GappSceneViewport *sceneViewport);
-static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int height, GappSceneViewport *sceneViewport);
+static void gapp_scene_viewport_on_viewport_ready(GtkWidget *viewport, GappSceneViewport *sceneViewport);
+static void gapp_scene_viewport_on_viewport_render(GtkWidget *viewport, int width, int height, GappSceneViewport *sceneViewport);
+static GtkWidget *gapp_scene_viewport_toolbar(GappSceneViewport *scene);
+static void gapp_scene_viewport_toolbar_open_popover_create_entity(GtkWidget *widget, GappSceneViewport *self);
 
 // MARK: CLASS
 G_DEFINE_TYPE(GappSceneViewport, gapp_scene_viewport, GTK_TYPE_BOX)
@@ -33,13 +35,22 @@ static void gapp_scene_viewport_init(GappSceneViewport *self)
 {
     self->camera = (go_camera_t){.offset = {0, 0}, .target = {0, 0}, .rotation = 0.0f, .zoom = 1.0f};
 
+    GtkWidget *overlay = gtk_overlay_new();
+    gtk_box_append(GTK_BOX(self), overlay);
+
+    GtkWidget *toolbar = gapp_scene_viewport_toolbar(self);
+    gtk_overlay_add_overlay(GTK_OVERLAY(overlay), toolbar);
+
     GtkWidget *viewport = gapp_widget_viewport_new();
-    g_signal_connect(viewport, "viewport-ready", G_CALLBACK(gapp_scene_viewport_ready), self);
-    g_signal_connect(viewport, "viewport-render", G_CALLBACK(gapp_scene_viewport_render), self);
-    gtk_box_append(GTK_BOX(self), viewport);
+    g_signal_connect(viewport, "viewport-ready", G_CALLBACK(gapp_scene_viewport_on_viewport_ready), self);
+    g_signal_connect(viewport, "viewport-render", G_CALLBACK(gapp_scene_viewport_on_viewport_render), self);
+    gtk_overlay_set_child(GTK_OVERLAY(overlay), viewport);
 }
 
-static void gapp_scene_viewport_ready(GtkWidget *viewport, GappSceneViewport *sceneViewport)
+// -----------------
+// MARK: SIGNALS
+// -----------------
+static void gapp_scene_viewport_on_viewport_ready(GtkWidget *viewport, GappSceneViewport *sceneViewport)
 {
     // ecs_entity_t paint = go_ecs_entity_new(go_ecs_scene_get_open(), "ShapeRect");
     // ecs_set(go_ecs_world(), paint, go_comp_rectangle_t, {.width = 100, .height = 100, .color = YELLOW, .lineColor = RED, .lineWidth = 2});
@@ -47,7 +58,7 @@ static void gapp_scene_viewport_ready(GtkWidget *viewport, GappSceneViewport *sc
     // transform->position = (go_vec2_t){100, 100};
 }
 
-static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int height, GappSceneViewport *sceneViewport)
+static void gapp_scene_viewport_on_viewport_render(GtkWidget *viewport, int width, int height, GappSceneViewport *sceneViewport)
 {
     ecs_entity_t scene_id = go_ecs_scene_get_open();
     if (!scene_id)
@@ -62,21 +73,7 @@ static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int heigh
     go_core_scene_rendering *rendering = ecs_get_mut(go_ecs_world(), projectSettings, go_core_scene_rendering);
     go_color_t gridColor = go_color_adjust_contrast(scene->color, 0.1f);
 
-    if (go_mouse_is_down(GO_MOUSEBUTTON_MIDDLE))
-    {
-        go_vec2_t delta = go_mouse_delta();
-        delta = go_math_vec2_scale(delta, -1.0f / sceneViewport->camera.zoom);
-        sceneViewport->camera.target = go_math_vec2_add(sceneViewport->camera.target, delta);
-    }
-
-    float wheel = go_mouse_wheel() * -1;
-    if (wheel != 0)
-    {
-        float scaleFactor = 1.0f + (0.02f * fabsf(wheel));
-        if (wheel < 0)
-            scaleFactor = 1.0f / scaleFactor;
-        sceneViewport->camera.zoom = go_math_clamp(sceneViewport->camera.zoom * scaleFactor, 0.60, 64.0f);
-    }
+    go_camera_controller_update(&sceneViewport->camera);
 
     go_gfx_viewport_begin();
     {
@@ -97,6 +94,89 @@ static void gapp_scene_viewport_render(GtkWidget *viewport, int width, int heigh
     go_ecs_process(0.0f);
 }
 
+// -----------------
+// MARK: UI
+// -----------------
+static GtkWidget *gapp_scene_viewport_toolbar(GappSceneViewport *scene)
+{
+    GtkWidget *toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
+    gtk_widget_add_css_class(toolbar, "toolbar_scene");
+    // gtk_widget_set_can_target(toolbar, FALSE);
+    gtk_widget_set_halign(toolbar, GTK_ALIGN_CENTER);
+    gtk_widget_set_valign(toolbar, GTK_ALIGN_START);
+    gtk_widget_set_margin_top(toolbar, 10);
+    {
+        GtkWidget *btn_item;
+
+        btn_item = gapp_widget_button_new_icon_with_label("list-add-symbolic", NULL);
+        gtk_box_append(toolbar, btn_item);
+        g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_scene_viewport_toolbar_open_popover_create_entity), scene);
+
+        gtk_box_append(toolbar, gapp_widget_separator_h());
+
+        btn_item = gapp_widget_button_new_icon_with_label("square-outline-thick-symbolic", NULL);
+        gtk_box_append(toolbar, btn_item);
+        // g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), scene);
+
+        btn_item = gapp_widget_button_new_icon_with_label("circle-outline-thick-symbolic", NULL);
+        gtk_box_append(toolbar, btn_item);
+        // g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), scene);
+
+        btn_item = gapp_widget_button_new_icon_with_label("draw-text-symbolic", NULL);
+        gtk_box_append(toolbar, btn_item);
+        // g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), scene);
+
+        gtk_box_append(toolbar, gapp_widget_separator_h());
+
+        btn_item = gapp_widget_button_new_icon_with_label("media-playback-start-symbolic", NULL);
+        // g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), scene);
+        gtk_box_append(toolbar, btn_item);
+    }
+
+    return toolbar;
+}
+
+static void gapp_scene_viewport_toolbar_open_popover_create_entity(GtkWidget *widget, GappSceneViewport *self)
+{
+    GtkWidget *popover = gtk_popover_new();
+    gtk_widget_set_parent(popover, widget);
+    gtk_popover_set_cascade_popdown(GTK_POPOVER(popover), FALSE);
+
+    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
+    gtk_popover_set_child(GTK_POPOVER(popover), vbox);
+    {
+        GtkWidget *btn_item;
+
+        btn_item = gapp_widget_button_new_icon_with_label("background-app-ghost-symbolic", "Sprite");
+        gtk_box_append(GTK_BOX(vbox), btn_item);
+
+        btn_item = gapp_widget_button_new_icon_with_label("image-symbolic", "Tiled Sprite");
+        gtk_box_append(GTK_BOX(vbox), btn_item);
+
+        gtk_box_append(vbox, gapp_widget_separator_h());
+
+        btn_item = gapp_widget_button_new_icon_with_label("square-outline-thick-symbolic", "Shape Square");
+        gtk_box_append(vbox, btn_item);
+
+        btn_item = gapp_widget_button_new_icon_with_label("circle-outline-thick-symbolic", "Shape Circle");
+        gtk_box_append(vbox, btn_item);
+
+        btn_item = gapp_widget_button_new_icon_with_label("draw-text-symbolic", "Text");
+        gtk_box_append(vbox, btn_item);
+
+        gtk_box_append(vbox, gapp_widget_separator_h());
+
+        btn_item = gapp_widget_button_new_icon_with_label("circle-anchor-center-symbolic", "Empty");
+        gtk_box_append(vbox, btn_item);
+    }
+
+    gtk_popover_popup(GTK_POPOVER(popover));
+}
+
+
+// -----------------
+// MARK: PUBLIC API
+// -----------------
 GappSceneViewport *gapp_scene_viewport_new(void)
 {
     return g_object_new(GAPP_TYPE_SCENE_VIEWPORT, NULL);

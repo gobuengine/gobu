@@ -44,7 +44,6 @@ static void gapp_headerbar_set_button_visible(GappMain *self, gboolean sensitive
 static void gapp_signal_project_settings_open(GtkWidget *widget, GappMain *self);
 static void gapp_signal_project_save(GtkWidget *widget, GappMain *self);
 static void gapp_signal_project_preview(GtkWidget *widget, GappMain *self);
-static void gapp_signal_open_popover_create_entity(GtkWidget *widget, GappMain *self);
 static void gapp_signal_observer_scene_open(ecs_iter_t *it);
 
 static bool gapp_config_init(void);
@@ -144,38 +143,6 @@ static void gapp_signal_project_preview(GtkWidget *widget, GappMain *self)
     gapp_signal_project_save(widget, self);
 }
 
-static void gapp_signal_open_popover_create_entity(GtkWidget *widget, GappMain *self)
-{
-    GtkWidget *popover = gtk_popover_new();
-    gtk_widget_set_parent(popover, widget);
-    gtk_popover_set_cascade_popdown(GTK_POPOVER(popover), FALSE);
-
-    GtkWidget *vbox = gtk_box_new(GTK_ORIENTATION_VERTICAL, 2);
-    gtk_popover_set_child(GTK_POPOVER(popover), vbox);
-    {
-        GtkWidget *btn_item;
-
-        btn_item = gapp_widget_button_new_icon_with_label("background-app-ghost-symbolic", "Sprite");
-        gtk_box_append(GTK_BOX(vbox), btn_item);
-
-        btn_item = gapp_widget_button_new_icon_with_label("image-symbolic", "Tiled Sprite");
-        gtk_box_append(GTK_BOX(vbox), btn_item);
-
-        gtk_box_append(vbox, gapp_widget_separator_h());
-
-        btn_item = gapp_widget_button_new_icon_with_label("square-outline-thick-symbolic", "Shape Square");
-        gtk_box_append(vbox, btn_item);
-
-        btn_item = gapp_widget_button_new_icon_with_label("circle-outline-thick-symbolic", "Shape Circle");
-        gtk_box_append(vbox, btn_item);
-
-        btn_item = gapp_widget_button_new_icon_with_label("draw-text-symbolic", "Text");
-        gtk_box_append(vbox, btn_item);
-    }
-
-    gtk_popover_popup(GTK_POPOVER(popover));
-}
-
 static void gapp_signal_observer_scene_open(ecs_iter_t *it)
 {
     GappMain *self = it->ctx;
@@ -248,47 +215,8 @@ static GtkWidget *gapp_module_editor(GappMain *app)
         gtk_paned_set_shrink_end_child(GTK_PANED(cpaned), FALSE);
         gtk_paned_set_end_child(hpaned, cpaned);
         {
-            GtkWidget *overlay = gtk_overlay_new();
-            gtk_paned_set_start_child(cpaned, overlay);
-            {
-                GtkWidget *toolbar = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 10);
-                gtk_widget_add_css_class(toolbar, "toolbar_scene");
-                // gtk_widget_set_can_target(toolbar, FALSE);
-                gtk_overlay_add_overlay(GTK_OVERLAY(overlay), toolbar);
-                gtk_widget_set_halign(toolbar, GTK_ALIGN_CENTER);
-                gtk_widget_set_valign(toolbar, GTK_ALIGN_START);
-                gtk_widget_set_margin_top(toolbar, 10);
-                {
-                    GtkWidget *btn_item;
-
-                    btn_item = gapp_widget_button_new_icon_with_label("list-add-symbolic", NULL);
-                    gtk_box_append(toolbar, btn_item);
-                    g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_open_popover_create_entity), app);
-
-                    gtk_box_append(toolbar, gapp_widget_separator_h());
-
-                    btn_item = gapp_widget_button_new_icon_with_label("square-outline-thick-symbolic", NULL);
-                    gtk_box_append(toolbar, btn_item);
-                    // g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), app);
-
-                    btn_item = gapp_widget_button_new_icon_with_label("circle-outline-thick-symbolic", NULL);
-                    gtk_box_append(toolbar, btn_item);
-                    // g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), app);
-
-                    btn_item = gapp_widget_button_new_icon_with_label("draw-text-symbolic", NULL);
-                    gtk_box_append(toolbar, btn_item);
-                    // g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), app);
-
-                    gtk_box_append(toolbar, gapp_widget_separator_h());
-
-                    btn_item = gapp_widget_button_new_icon_with_label("media-playback-start-symbolic", NULL);
-                    g_signal_connect(btn_item, "clicked", G_CALLBACK(gapp_signal_project_preview), app);
-                    gtk_box_append(toolbar, btn_item);
-                }
-
-                app->viewport = gapp_scene_viewport_new();
-                gtk_overlay_set_child(GTK_OVERLAY(overlay), app->viewport);
-            }
+            app->viewport = gapp_scene_viewport_new();
+            gtk_paned_set_start_child(cpaned, app->viewport);
         }
 
         // right modulo

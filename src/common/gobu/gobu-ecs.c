@@ -161,6 +161,22 @@ go_public ecs_entity_t go_ecs_project_settings(void)
 }
 
 // -----------------
+// NOTE MARK: EntityTemplate
+// -----------------
+go_public ecs_entity_t go_ecs_enttiy_new_tmp_text(float x, float y)
+{
+    ecs_world_t *world = go_ecs_world();
+    ecs_entity_t entity = go_ecs_entity_new_low(go_ecs_scene_get_open());
+
+    g_autofree gchar *name_entity = go_util_string_format("Text%ld", entity);
+    ecs_set_name(world, entity, name_entity);
+    ecs_set(world, entity, go_transform_t, {.position = {x, y}, .scale = {1, 1}, .rotation = 0, .origin = GB_ORIGIN_CENTER});
+    ecs_set(world, entity, go_comp_text_t, {.text = go_util_string("Hello World")});
+
+    return entity;
+}
+
+// -----------------
 // NOTE MARK: Entity
 // -----------------
 go_public ecs_entity_t go_ecs_entity_new_low(ecs_entity_t parent)

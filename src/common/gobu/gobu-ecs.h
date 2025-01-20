@@ -58,6 +58,8 @@ bool go_ecs_load_from_file(const char *filename);
 go_public void go_ecs_project_settings_init(const char *name, int width, int height);
 go_public ecs_entity_t go_ecs_project_settings(void);
 
+go_public ecs_entity_t go_ecs_entity_new_tmp_text(float x, float y);
+
 go_public ecs_entity_t go_ecs_entity_new_low(ecs_entity_t parent);
 go_public ecs_entity_t go_ecs_entity_new(ecs_entity_t parent, const char *name);
 go_public void go_ecs_set_parent(ecs_entity_t entity, ecs_entity_t parent);
