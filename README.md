@@ -2,30 +2,34 @@
 
 <p align="center">
   <a href="https://gobuengine.org">
-    <img src="logo.png" width="200" alt="Godot Engine logo">
+    <img src="logo.png" width="200" alt="Gobu Engine logo">
   </a>
 </p>
 
-**Gobu** es un software diseñado para crear juegos de manera intuitiva y eficiente, pensado para desarrolladores de todos los niveles, desde principiantes hasta expertos.
-
-## Filosofía del proyecto
-El objetivo principal de Gobu es **simplificar el desarrollo de videojuegos**, permitiendo que los desarrolladores se concentren en la creatividad y el diseño, sin perder tiempo en configuraciones complicadas o procesos innecesarios.
-
-## Roadmap
-
-### Parte 1 — Rendimiento
-
-Uno de los objetivos principales de Gobu es mejorar radicalmente el **tiempo de carga del editor y de los proyectos**.  
-Actualmente, Gobu carga el editor y un proyecto **hasta 1000% más rápido que Godot**, gracias a una reestructuración del core, inicialización diferida de sistemas y una arquitectura más ligera orientada al editor.
+<p align="center">
+  <strong>Simple. Fast. Focused.</strong><br>
+  A game engine designed to remove friction and let you build faster.
+</p>
 
 ---
 
-### Parte 2 — Filosofía de archivos
+## 🚀 What is Gobu?
 
-Gobu evita el uso de **escenas para todo**. Cada tipo de archivo tiene una responsabilidad clara:
+**Gobu** is a game development tool designed to be **intuitive, fast, and efficient**, built for developers of all levels — from beginners to experienced creators.
 
-- **Scene (`.scene`)**: unidades completas del proyecto (niveles, estados).
-- **Prefab (`.prefab`)**: elementos reutilizables y componibles.
-- **UIControl (`.uicontrol`)** *(en análisis)*: archivos dedicados exclusivamente a la UI.
+Its goal is simple:  
+👉 **reduce complexity so you can focus on making games, not fighting the engine.**
 
-Esta separación mejora la claridad del proyecto, la reutilización y el mantenimiento a largo plazo.
+---
+
+## 🧠 Philosophy
+
+Gobu is built around one core idea:
+
+> **Game development should be simple, predictable, and fast.**
+
+Instead of overwhelming you with systems and configurations, Gobu focuses on:
+
+- ⚡ Fast startup and iteration  
+- 🧩 Clear structure and organization  
+- 🎯 Minimal friction between idea and execution  
