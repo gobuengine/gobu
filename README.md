@@ -2,7 +2,7 @@
 
 <p align="center">
   <a href="https://gobuengine.org">
-    <img src="logo.png" width="200" alt="Gobu Engine logo">
+    <img src="GGOBU_new.png" width="200" alt="Gobu Engine logo">
   </a>
 </p>
 
