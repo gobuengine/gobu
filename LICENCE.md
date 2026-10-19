@@ -1,71 +1,79 @@
-# Gobu License / EULA
+# Gobu Engine End User License Agreement (EULA)
 
-**Last updated:** March 20, 2026
+_Last updated: 2026-10-18_
 
-## 1. Software Usage
-Gobu is free for personal and commercial use. You may use it to create games, projects, or any content without paying royalties.
+This agreement is between you and the author of Gobu Engine ("we", "us"). By downloading,
+installing or using Gobu Engine ("Gobu") you accept it. If you don't, don't use Gobu.
 
-## 2. Ownership
-Gobu and all its code, tools, and technology remain the property of its creator. This license does not grant you ownership of the software.
+## 1. What you can do
 
-## 3. Source Code
-The source code of Gobu is **not public**.  
-You are not allowed to:
-- Access, copy, or distribute the source code  
-- Attempt to decompile, reverse engineer, or reconstruct the software  
+- Use Gobu **for free**, for personal and commercial projects.
+- Make and sell games, apps and any other content with it. **No royalties, no fees.**
+- Share the official, unmodified Gobu download with others, together with this agreement.
 
-## 4. Why Gobu is not open source
-Gobu is not open source for several reasons:
+## 2. Your games are yours
 
-- To maintain control over the development and direction of the project  
-- To ensure software quality and consistency  
-- To move faster without relying on external contributions  
-- Because the open source model does not currently align with the goal of making a living from Gobu's development  
+Everything you create with Gobu (your games, code, art, levels, music and other content)
+belongs to you. You can sell, publish and distribute it however you want.
 
-## 5. Distribution
-You may share the **official Gobu binary** as long as:
-- It is not modified  
-- It is not sold as your own product  
-- This EULA is included  
+- **You don't have to credit Gobu.** A "Made with Gobu" mention is appreciated, never
+  required.
+- **You don't have to add any license or credit for the engine's components.** See section 3.
 
-It is not allowed to redistribute Gobu as part of another product, service, or platform without explicit permission from the author.
+## 3. Components from other projects
 
-## 6. SaaS / Service Usage
-You are not allowed to use Gobu, in whole or in part, to provide it as a service to third parties, including but not limited to:
+Gobu is built on open-source software: it is based on Godot Engine (MIT license) and uses
+third-party libraries such as Box2D, Box3D, bgfx, flecs and FreeType, each under its own
+license. The full list is in `COPYRIGHT.txt`, shipped with Gobu.
 
-- Online platforms  
-- Cloud services  
-- Subscription-based tools  
+- **Gobu takes care of their notices for you.** The editor shows them, and every game you
+  export includes them automatically in a `THIRD_PARTY_NOTICES.txt` file next to the game.
+  You don't need to add anything to your credits, menus or store pages.
+- **Don't delete that file** from the games you distribute.
+- These components remain under their own licenses. Nothing in this agreement limits the
+  rights those licenses give you for those components.
 
-without explicit permission from the author.
+## 4. What belongs to us
 
-## 7. Modifications
-You are not allowed to modify Gobu or create derivative versions of the engine without explicit permission.
+Gobu as a product (its own code, its editor, the Grost language, its tools, and the "Gobu"
+name, logo and branding) belongs to us. Using Gobu doesn't transfer any ownership to you.
+Gobu is not open source, and its source code is not public.
 
-## 8. Competitive Use
-You are not allowed to use Gobu to develop engines, tools, or software that directly compete with Gobu.
+## 5. What you can't do without our written permission
 
-## 9. Trademark
-"Gobu" is a trademark of the author. You may not use the name, logo, or branding of Gobu for derived products without permission.
+- Sell, rent or redistribute Gobu itself, or present it as your own.
+- Distribute a modified version of Gobu, or bundle Gobu into another product or platform.
+- Offer Gobu to third parties as a service (online platforms, cloud, subscriptions).
+- Decompile, disassemble or reverse engineer Gobu, except where the law or the licenses of
+  section 3 allow it.
+- Use Gobu to create game engines, editors or tools that compete directly with Gobu.
+- Use the "Gobu" name, logo or branding for your own products, or in a way that suggests we
+  endorse them. You may say truthfully that your game is "made with Gobu".
 
-## 10. Credits
-Giving credit to Gobu in projects created with the software is appreciated but not required.
+## 6. Versions and updates
 
-## 11. Versions and License
-Each version of Gobu may include its own EULA or modifications to this license.  
-By using a specific version, you agree to the terms of that version.
+Gobu is updated continuously. Each version comes with its own agreement, and using a version
+means accepting the agreement that comes with it. We don't guarantee that projects stay
+compatible between versions.
 
-## 12. Updates
-Gobu will receive continuous updates, but full compatibility between versions is not guaranteed.
+## 7. Supporting Gobu
 
-## 13. Support and Development
-The development of Gobu depends on community support, especially through platforms like Patreon.
+Gobu is an independent project, kept going by the community. You can support it on
+Patreon: <https://www.patreon.com/cw/GobuEngine>. Supporting is optional and doesn't change
+the terms of this agreement.
 
-## 14. Disclaimer
-Gobu is provided "as is". The author is not responsible for:
-- Data loss  
-- Software failures  
-- Direct or indirect damages  
+## 8. No warranty
 
-## 15. Termination
-This license may be revoked if you do not comply with its terms.
+Gobu is provided "as is", without warranty of any kind. To the extent allowed by law, we are
+not liable for data loss, failures or any damages that come from using Gobu. Keep backups of
+your projects.
+
+## 9. Termination
+
+If you break this agreement, your right to use Gobu ends. The games you have already
+published with Gobu remain yours and can stay published.
+
+## 10. Contact
+
+Questions, permissions and reports: contact@gobuengine.org — or open an issue at
+<https://github.com/gobuengine/gobu/issues>.
